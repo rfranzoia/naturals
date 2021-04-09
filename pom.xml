@@ -19,7 +19,6 @@
 
     <modules>
         <module>orders-app</module>
-        <module>naturals-tests</module>
     </modules>
 
 </project>
