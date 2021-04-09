@@ -1,10 +1,9 @@
-package com.critical.example.sample_bitofcode.resource;
+package com.naturals.orders.resource;
 
-import com.critical.example.sample_bitofcode.domain.OrderItems;
-import com.critical.example.sample_bitofcode.domain.Orders;
-import com.critical.example.sample_bitofcode.service.OrdersService;
-import com.critical.example.sample_bitofcode.util.BasicResource;
-import com.critical.example.sample_bitofcode.util.MessageHelper;
+import com.naturals.orders.domain.Orders;
+import com.naturals.orders.service.OrdersService;
+import com.naturals.orders.util.BasicResource;
+import com.naturals.orders.util.MessageHelper;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -14,7 +13,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import java.net.URI;
-import java.util.List;
 
 @Path("/orders")
 @ApplicationScoped

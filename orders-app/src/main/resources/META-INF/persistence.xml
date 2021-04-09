@@ -6,9 +6,9 @@
              version="2.2">
   <persistence-unit name="ordersPU" transaction-type="JTA">
       <jta-data-source>java:global/ordersDS</jta-data-source>
-      <class>com.critical.example.sample_bitofcode.domain.Orders</class>
-      <class>com.critical.example.sample_bitofcode.domain.OrderItems</class>
-      <class>com.critical.example.sample_bitofcode.domain.OrderStatus</class>
+      <class>com.naturals.orders.domain.Orders</class>
+      <class>com.naturals.orders.domain.OrderItems</class>
+      <class>com.naturals.orders.domain.OrderStatus</class>
       <properties>
           <property name="javax.persistence.schema-generation.database.action" value="drop-and-create"/>
           <property name="javax.persistence.sql-load-script-source" value="import.sql"/>

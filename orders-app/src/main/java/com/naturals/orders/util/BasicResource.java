@@ -1,4 +1,4 @@
-package com.critical.example.sample_bitofcode.util;
+package com.naturals.orders.util;
 
 import javax.inject.Inject;
 import javax.ws.rs.core.Response;

@@ -1,4 +1,4 @@
-package com.critical.example.sample_bitofcode.util;
+package com.naturals.orders.util;
 
 import javax.annotation.Resource;
 import javax.persistence.*;

@@ -1,9 +1,8 @@
-package com.critical.example.sample_bitofcode.resource;
+package com.naturals.orders.resource;
 
-import com.critical.example.sample_bitofcode.domain.OrderItems;
-import com.critical.example.sample_bitofcode.service.OrderItemsService;
-import com.critical.example.sample_bitofcode.service.OrdersService;
-import com.critical.example.sample_bitofcode.util.BasicResource;
+import com.naturals.orders.domain.OrderItems;
+import com.naturals.orders.service.OrderItemsService;
+import com.naturals.orders.util.BasicResource;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;

@@ -1,4 +1,4 @@
-package com.critical.example.sample_bitofcode.util;
+package com.naturals.orders.util;
 
 import org.eclipse.microprofile.config.Config;
 import org.eclipse.microprofile.config.ConfigProvider;

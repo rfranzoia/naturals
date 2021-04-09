@@ -1,4 +1,4 @@
-package com.critical.example.sample_bitofcode;
+package com.naturals.orders;
 
 import org.eclipse.microprofile.health.HealthCheck;
 import org.eclipse.microprofile.health.HealthCheckResponse;

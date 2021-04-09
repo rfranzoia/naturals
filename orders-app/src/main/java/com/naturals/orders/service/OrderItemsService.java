@@ -1,8 +1,8 @@
-package com.critical.example.sample_bitofcode.service;
+package com.naturals.orders.service;
 
-import com.critical.example.sample_bitofcode.domain.OrderStatus;
-import com.critical.example.sample_bitofcode.domain.Orders;
-import com.critical.example.sample_bitofcode.util.AbstractService;
+import com.naturals.orders.domain.OrderItems;
+import com.naturals.orders.domain.Orders;
+import com.naturals.orders.util.AbstractService;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.Default;
@@ -15,22 +15,22 @@ import java.util.List;
 @Default
 @ApplicationScoped
 @Transactional(Transactional.TxType.REQUIRED)
-public class OrderStatusService extends AbstractService<OrderStatus, Long> {
+public class OrderItemsService extends AbstractService<OrderItems, Long> {
 
     @Inject
     private OrdersService ordersService;
 
     @Inject
-    public OrderStatusService() {
-        super(OrderStatus.class, "ordersPU");
+    public OrderItemsService() {
+        super(OrderItems.class, "ordersPU");
     }
 
-    public List<OrderStatus> findByOrderId(final Long orderId) {
+    public List<OrderItems> findByOrderId(final Long orderId) {
         Orders o = ordersService.findById(orderId);
         if (o == null) {
             throw new WebApplicationException("Order doesn't exists!", Response.Status.NOT_FOUND);
         } else {
-            return findByNamedQuery("OrderStatus.findByOrder", o);
+            return findByNamedQuery("OrderItems.findByOrder", o);
         }
     }
 }

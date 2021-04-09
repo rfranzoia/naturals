@@ -1,4 +1,4 @@
-package com.critical.example.sample_bitofcode.util;
+package com.naturals.orders.util;
 
 import javax.json.bind.annotation.JsonbProperty;
 import java.io.Serializable;

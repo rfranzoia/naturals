@@ -1,6 +1,6 @@
-package com.critical.example.sample_bitofcode.domain;
+package com.naturals.orders.domain;
 
-import com.critical.example.sample_bitofcode.util.DefaultEntity;
+import com.naturals.orders.util.DefaultEntity;
 
 import javax.persistence.*;
 

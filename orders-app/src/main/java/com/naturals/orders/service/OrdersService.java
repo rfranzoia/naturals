@@ -1,9 +1,8 @@
-package com.critical.example.sample_bitofcode.service;
+package com.naturals.orders.service;
 
-import com.critical.example.sample_bitofcode.domain.OrderItems;
-import com.critical.example.sample_bitofcode.domain.Orders;
-import com.critical.example.sample_bitofcode.util.AbstractService;
-import com.critical.example.sample_bitofcode.util.PagedList;
+import com.naturals.orders.domain.Orders;
+import com.naturals.orders.util.AbstractService;
+import com.naturals.orders.util.PagedList;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.Default;
