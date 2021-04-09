@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app>
+    <data-source>
+        <name>java:global/ordersDS</name>
+        <class-name>org.h2.jdbcx.JdbcDataSource</class-name>
+        <url>jdbc:h2:mem:ordersDB;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE</url>
+        <user>sa</user>
+        <password>password</password>
+    </data-source>
+</web-app>
