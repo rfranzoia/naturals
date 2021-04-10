@@ -72,6 +72,27 @@
 		<finalName>${project.artifactId}</finalName>
 		<plugins>
 			<plugin>
+				<groupId>fish.payara.maven.plugins</groupId>
+				<artifactId>payara-micro-maven-plugin</artifactId>
+				<version>1.3.0</version>
+				<configuration>
+					<!-- payara-micro:bundle takes the version from payaraVersion -->
+					<payaraVersion>5.2021.1</payaraVersion>
+					<!-- payara-micro:start takes the version from artifactItem -->
+					<artifactItem>
+						<groupId>fish.payara.extras</groupId>
+						<artifactId>payara-micro</artifactId>
+						<version>5.201</version>
+					</artifactItem>
+					<deployWar>true</deployWar>
+					<commandLineOptions>
+						<option>
+							<key>--autoBindHttp</key>
+						</option>
+					</commandLineOptions>
+				</configuration>
+			</plugin>
+			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-war-plugin</artifactId>
 				<version>3.3.0</version>
