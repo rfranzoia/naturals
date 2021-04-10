@@ -3,7 +3,7 @@ package com.naturals.orders.resource;
 import com.naturals.orders.domain.Orders;
 import com.naturals.orders.service.OrdersService;
 import com.naturals.orders.util.BasicResource;
-import com.naturals.orders.util.MessageHelper;
+import com.naturals.orders.util.ConfigHelper;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -23,7 +23,7 @@ public class OrdersResource extends BasicResource {
     private OrdersService service;
 
     @Inject
-    private MessageHelper messageHelper;
+    private ConfigHelper configHelper;
 
     @GET
     public Response list(@QueryParam("page") @DefaultValue("-1") Integer page) {

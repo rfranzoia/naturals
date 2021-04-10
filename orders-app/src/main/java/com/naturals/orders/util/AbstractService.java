@@ -1,6 +1,7 @@
 package com.naturals.orders.util;
 
 import javax.annotation.Resource;
+import javax.inject.Inject;
 import javax.persistence.*;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
@@ -12,14 +13,15 @@ import java.util.Map;
 @SuppressWarnings("unchecked")
 public class AbstractService<T, ID extends Serializable> implements Service<T, ID> {
 
+    private final Class<T> persistentClass;
+    private final String persistenceUnitName;
+    protected EntityManager entityManager;
+
     @Resource
     private UserTransaction utx;
-    
-    private final Class<T> persistentClass;
-    private final int pageSize = 10;
-    private final String persistenceUnitName;
 
-    protected EntityManager entityManager;
+    @Inject
+    protected ConfigHelper configHelper;
 
     public AbstractService(final Class<T> persistentClass, String persistenceUnitName) {
         this.persistentClass = persistentClass;
@@ -35,11 +37,7 @@ public class AbstractService<T, ID extends Serializable> implements Service<T, I
             throw new RuntimeException("Database Communication Error!");
         }
 
-        return (EntityManager) emf.createEntityManager();
-    }
-
-    public int getPageSize() {
-        return pageSize;
+        return emf.createEntityManager();
     }
 
     @Override
@@ -60,7 +58,7 @@ public class AbstractService<T, ID extends Serializable> implements Service<T, I
         CriteriaBuilder cb = entityManager.getCriteriaBuilder();
         CriteriaQuery<T> cq = cb.createQuery(persistentClass);
         cq.select(cq.from(persistentClass));
-        return (List<T>) entityManager.createQuery(cq).getResultList();
+        return entityManager.createQuery(cq).getResultList();
     }
 
     @Override
@@ -68,6 +66,8 @@ public class AbstractService<T, ID extends Serializable> implements Service<T, I
         CriteriaBuilder cb = entityManager.getCriteriaBuilder();
         CriteriaQuery<T> cq = cb.createQuery(persistentClass);
         cq.select(cq.from(persistentClass));
+
+        int pageSize = configHelper.getInteger("com.naturals.orders.pageSize");
 
         Query q = entityManager.createQuery(cq);
         q.setFirstResult((startPage - 1) * pageSize);
@@ -79,64 +79,50 @@ public class AbstractService<T, ID extends Serializable> implements Service<T, I
     @Override
     public T findById(final ID id) {
         entityManager.clear();
-        final T result = entityManager.find(persistentClass, id);
-        return result;
+        return entityManager.find(persistentClass, id);
     }
 
     @Override
     public List<T> findByNamedQuery(final String name, Object... params) {
-        javax.persistence.Query query = entityManager.createNamedQuery(name);
+        Query query = entityManager.createNamedQuery(name);
         entityManager.clear();
-        
+
         for (int i = 0; i < params.length; i++) {
             query.setParameter(i + 1, params[i]);
         }
 
-        final List<T> result = (List<T>) query.getResultList();
-        return result;
+        return (List<T>) query.getResultList();
     }
 
     @Override
-    public List<T> findByNamedQueryAndNamedParams(final String name, final Map<String, ? extends Object> params) {
-        javax.persistence.Query query = entityManager.createNamedQuery(name);
+    public List<T> findByNamedQueryAndNamedParams(final String name, final Map<String, ?> params) {
+        Query query = entityManager.createNamedQuery(name);
         entityManager.clear();
-        
-        for (final Map.Entry<String, ? extends Object> param : params.entrySet()) {
+
+        for (final Map.Entry<String, ?> param : params.entrySet()) {
             query.setParameter(param.getKey(), param.getValue());
         }
 
-        final List<T> result = (List<T>) query.getResultList();
-        return result;
+        return (List<T>) query.getResultList();
     }
-    
+
     @Override
     public T getByNamedQuery(final String name) {
         return getByNamedQuery(name, null);
     }
-    
+
     @Override
-    public T getByNamedQuery(final String name, final Map<String, ? extends Object> params) {
-        javax.persistence.Query query = entityManager.createNamedQuery(name);
+    public T getByNamedQuery(final String name, final Map<String, ?> params) {
+        Query query = entityManager.createNamedQuery(name);
         entityManager.clear();
-        
+
         if (params != null) {
-            for (final Map.Entry<String, ? extends Object> param : params.entrySet()) {
+            for (final Map.Entry<String, ?> param : params.entrySet()) {
                 query.setParameter(param.getKey(), param.getValue());
             }
         }
-        
-        final List<T> result = (List<T>) query.getResultList();
-        
-        if (!result.isEmpty()) {
-            return result.get(0);
-        }
-        
-        return null;
-    }
 
-    @PersistenceContext
-    public void setEntityManager(final EntityManager entityManager) {
-        this.entityManager = entityManager;
+        return (T) query.getSingleResult();
     }
 
     @Override
@@ -145,9 +131,6 @@ public class AbstractService<T, ID extends Serializable> implements Service<T, I
             utx.begin();
             entityManager.remove(entity);
             utx.commit();
-        } catch (RollbackException rex) {
-            throw rex;
-            
         } catch (Exception e) {
             utx.rollback();
             throw e;
@@ -160,140 +143,112 @@ public class AbstractService<T, ID extends Serializable> implements Service<T, I
             utx.begin();
             final T savedEntity = entityManager.merge(entity);
             utx.commit();
-            return savedEntity;    
-        } catch (RollbackException rex) {
-            throw rex;
-            
+            return savedEntity;
         } catch (Exception e) {
             utx.rollback();
             throw e;
         }
     }
-    
+
     @Override
     public void save(T entity) throws Exception {
         try {
             utx.begin();
             entityManager.persist(entity);
             utx.commit();
-        } catch (RollbackException rex) {
-            throw rex;
-
         } catch (Exception e) {
             utx.rollback();
             throw e;
         }
     }
-    
+
     @Override
-    public List<T> listByQuery(String query) throws Exception { 
+    public List<T> listByQuery(final String query) {
         return this.listByQueryAndParameters(query, null);
     }
-    
+
     @Override
-    public List<T> listByHQL(String query) throws Exception { 
+    public List<T> listByHQL(final String query) {
         return this.listByHQLAndParameters(query, null);
     }
-    
-    @Override
-    public List<T> listByQueryAndParameters(String query, final Map<String, ? extends Object> params)
-        throws Exception {
-        try {
-            entityManager.clear();
-            Query nativeQuery = entityManager.createNativeQuery(query, persistentClass.getClass());
 
-            if (params != null) {
-                for (final Map.Entry<String, ? extends Object> param : params.entrySet()) {
-                    nativeQuery.setParameter(param.getKey(), param.getValue());
-                }
-            }
-            return (List<T>) nativeQuery.getResultList();
-        } catch (Exception e) {
-            throw e;
-        }
-            
-    }
-    
     @Override
-    public List<T> listByHQLAndParameters(String query, final Map<String, ? extends Object> params)
-        throws Exception {
-        try {
-            entityManager.clear();
-            Query hqlQuery = entityManager.createQuery(query);
-            
-            if (params != null) {
-                for (final Map.Entry<String, ? extends Object> param : params.entrySet()) {
-                    hqlQuery.setParameter(param.getKey(), param.getValue());       
-                }
+    public List<T> listByQueryAndParameters(final String query, final Map<String, ?> params) {
+        entityManager.clear();
+        Query nativeQuery = entityManager.createNativeQuery(query, persistentClass);
+
+        if (params != null) {
+            for (final Map.Entry<String, ?> param : params.entrySet()) {
+                nativeQuery.setParameter(param.getKey(), param.getValue());
             }
-            return (List<T>) hqlQuery.getResultList();
-        } catch (Exception e) {
-            throw e;
-        } finally {
-            
         }
-            
+        return (List<T>) nativeQuery.getResultList();
+
     }
 
     @Override
-    public T getByHQLAndParameters(String hql,final Map<String, ? extends Object> params)
-        throws Exception {
-        
-        try {
-            entityManager.clear();
-            Query query = entityManager.createQuery(hql);
-            
-            if (params != null) {
-                for (final Map.Entry<String, ? extends Object> param : params.entrySet()) {
-                    query.setParameter(param.getKey(), param.getValue());
-                }
-            }
+    public List<T> listByHQLAndParameters(final String query, final Map<String, ?> params) {
+        entityManager.clear();
+        Query hqlQuery = entityManager.createQuery(query);
 
-            query.setFlushMode(FlushModeType.AUTO);
-            
-            return (T) query.getSingleResult();
-        } catch (Exception e) {
-            throw e;
+        if (params != null) {
+            for (final Map.Entry<String, ?> param : params.entrySet()) {
+                hqlQuery.setParameter(param.getKey(), param.getValue());
+            }
         }
-        
+        return (List<T>) hqlQuery.getResultList();
+
     }
-    
-    
+
     @Override
-    public T getByQueryAndParameters(String query, final Map<String, ? extends Object> params) 
-        throws Exception {
-        
-        try {
-            entityManager.clear();
-            Query sqlQuery = entityManager.createQuery(query);
+    public T getByHQLAndParameters(final String hql, final Map<String, ?> params) {
 
-            if (params != null) {
-                for (final Map.Entry<String, ? extends Object> param : params.entrySet()) {
-                    sqlQuery.setParameter(param.getKey(), param.getValue());
-                }
+        entityManager.clear();
+        Query query = entityManager.createQuery(hql);
+
+        if (params != null) {
+            for (final Map.Entry<String, ?> param : params.entrySet()) {
+                query.setParameter(param.getKey(), param.getValue());
             }
-
-            sqlQuery.setFlushMode(FlushModeType.AUTO);
-            
-            return (T) sqlQuery.getSingleResult();
-        } catch (Exception e) {
-            throw e;
         }
-        
-    }
-    
-    public String addClausule(String SQL, String clausule) {
-        String where = "";
 
-        if (SQL.toUpperCase().indexOf("WHERE") < 0) {
-            where += "\n WHERE ";
+        query.setFlushMode(FlushModeType.AUTO);
+
+        return (T) query.getSingleResult();
+
+    }
+
+
+    @Override
+    public T getByQueryAndParameters(final String query, final Map<String, ?> params) {
+
+        entityManager.clear();
+        Query sqlQuery = entityManager.createQuery(query);
+
+        if (params != null) {
+            for (final Map.Entry<String, ?> param : params.entrySet()) {
+                sqlQuery.setParameter(param.getKey(), param.getValue());
+            }
+        }
+
+        sqlQuery.setFlushMode(FlushModeType.AUTO);
+
+        return (T) sqlQuery.getSingleResult();
+
+    }
+
+    public String addClause(final String SQL, final String clause) {
+        StringBuilder where = new StringBuilder();
+
+        if (!SQL.toUpperCase().contains("WHERE")) {
+            where.append("\n WHERE ");
         } else {
-            where += "\n AND ";
+            where.append("\n AND ");
         }
 
-        where += clausule;
+        where.append(clause);
 
-        return where;
+        return where.toString();
 
     }
 }

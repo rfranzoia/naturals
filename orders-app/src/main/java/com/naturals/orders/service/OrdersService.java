@@ -24,7 +24,9 @@ public class OrdersService extends AbstractService<Orders, Long> {
     public PagedList<Orders> listAllPaginated(Integer page) {
         List<Orders> data = findAllPaginated(page);
         Long count = countAll();
-        Integer totalPages = (count.intValue() / getPageSize()) + (count % getPageSize() == 0?0:1);
+        int pageSize = configHelper.getInteger("com.naturals.orders.pageSize");
+
+        Integer totalPages = (count.intValue() / pageSize) + (count % pageSize == 0?0:1);
 
         return PagedList.newBuilder()
                 .setTotalPages(totalPages)

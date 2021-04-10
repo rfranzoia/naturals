@@ -7,12 +7,18 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Singleton;
 
 @Singleton
-public class MessageHelper {
+public class ConfigHelper {
 
-    public String getMessage(final String key) {
-        Config config = ConfigProvider.getConfig();
+    private Config config = ConfigProvider.getConfig();
+
+    public String getString(final String key) {
         return config.getOptionalValue(key, String.class)
                 .orElse(key);
+    }
+
+    public Integer getInteger(final String key) {
+        return config.getOptionalValue(key, Integer.class)
+                .orElse(Integer.valueOf(-1));
     }
 
 }
