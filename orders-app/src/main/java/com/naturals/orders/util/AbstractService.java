@@ -91,7 +91,7 @@ public class AbstractService<T, ID extends Serializable> implements Service<T, I
             query.setParameter(i + 1, params[i]);
         }
 
-        return (List<T>) query.getResultList();
+        return query.getResultList();
     }
 
     @Override
@@ -163,17 +163,27 @@ public class AbstractService<T, ID extends Serializable> implements Service<T, I
     }
 
     @Override
-    public List<T> listByQuery(final String query) {
-        return this.listByQueryAndParameters(query, null);
+    public List<T> listByNativeQuery(final String query) {
+        return this.listByNativeQueryAndParameters(query, Map.of());
     }
 
     @Override
     public List<T> listByHQL(final String query) {
-        return this.listByHQLAndParameters(query, null);
+        return this.listByJPQLAndParameters(query, Map.of());
+    }
+
+    public List<T> listByNativeQueryAndParameters(final String query, final Object... params) {
+        entityManager.clear();
+        Query nativeQuery = entityManager.createNativeQuery(query, persistentClass);
+
+        for (int i = 0; i < params.length; i++) {
+            nativeQuery.setParameter(i + 1, params[i]);
+        }
+        return nativeQuery.getResultList();
     }
 
     @Override
-    public List<T> listByQueryAndParameters(final String query, final Map<String, ?> params) {
+    public List<T> listByNativeQueryAndParameters(final String query, final Map<String, ?> params) {
         entityManager.clear();
         Query nativeQuery = entityManager.createNativeQuery(query, persistentClass);
 
@@ -182,58 +192,60 @@ public class AbstractService<T, ID extends Serializable> implements Service<T, I
                 nativeQuery.setParameter(param.getKey(), param.getValue());
             }
         }
-        return (List<T>) nativeQuery.getResultList();
+        return nativeQuery.getResultList();
+    }
+
+    public List<T> listByJPQLAndParameters(final String query, final Object... params) {
+        entityManager.clear();
+        Query jpqlQuery = entityManager.createQuery(query);
+
+        for (int i = 0; i < params.length; i++) {
+            jpqlQuery.setParameter(i, params[i]);
+        }
+        return jpqlQuery.getResultList();
+    }
+
+    @Override
+    public List<T> listByJPQLAndParameters(final String query, final Map<String, ?> params) {
+        entityManager.clear();
+        Query jpqlQuery = entityManager.createQuery(query);
+
+        if (params != null) {
+            for (final Map.Entry<String, ?> param : params.entrySet()) {
+                jpqlQuery.setParameter(param.getKey(), param.getValue());
+            }
+        }
+        return jpqlQuery.getResultList();
 
     }
 
     @Override
-    public List<T> listByHQLAndParameters(final String query, final Map<String, ?> params) {
+    public T getByJPQLAndParameters(final String query, final Object... params) {
         entityManager.clear();
-        Query hqlQuery = entityManager.createQuery(query);
+        Query jpqlQuery = entityManager.createQuery(query);
 
-        if (params != null) {
-            for (final Map.Entry<String, ?> param : params.entrySet()) {
-                hqlQuery.setParameter(param.getKey(), param.getValue());
-            }
+        for (int i = 0; i < params.length; i++) {
+            jpqlQuery.setParameter(i, params[i]);
         }
-        return (List<T>) hqlQuery.getResultList();
 
+        return (T) jpqlQuery.getSingleResult();
     }
 
     @Override
-    public T getByHQLAndParameters(final String hql, final Map<String, ?> params) {
+    public T getByJPQLAndNamedParameters(final String query, final Map<String, ?> params) {
 
         entityManager.clear();
-        Query query = entityManager.createQuery(hql);
+        Query jpqlQuery = entityManager.createQuery(query);
 
         if (params != null) {
             for (final Map.Entry<String, ?> param : params.entrySet()) {
-                query.setParameter(param.getKey(), param.getValue());
+                jpqlQuery.setParameter(param.getKey(), param.getValue());
             }
         }
 
-        query.setFlushMode(FlushModeType.AUTO);
+        jpqlQuery.setFlushMode(FlushModeType.AUTO);
 
-        return (T) query.getSingleResult();
-
-    }
-
-
-    @Override
-    public T getByQueryAndParameters(final String query, final Map<String, ?> params) {
-
-        entityManager.clear();
-        Query sqlQuery = entityManager.createQuery(query);
-
-        if (params != null) {
-            for (final Map.Entry<String, ?> param : params.entrySet()) {
-                sqlQuery.setParameter(param.getKey(), param.getValue());
-            }
-        }
-
-        sqlQuery.setFlushMode(FlushModeType.AUTO);
-
-        return (T) sqlQuery.getSingleResult();
+        return (T) jpqlQuery.getSingleResult();
 
     }
 
