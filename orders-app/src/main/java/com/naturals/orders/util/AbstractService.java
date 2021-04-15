@@ -54,6 +54,61 @@ public class AbstractService<T, ID extends Serializable> implements Service<T, I
     }
 
     @Override
+    public T findById(final ID id) {
+        entityManager.clear();
+        return entityManager.find(persistentClass, id);
+    }
+
+    @Override
+    public T getByNamedQuery(final String name) {
+        return getByNamedQuery(name, null);
+    }
+
+    @Override
+    public T getByNamedQuery(final String name, final Map<String, ?> params) {
+        Query query = entityManager.createNamedQuery(name);
+        entityManager.clear();
+
+        if (params != null) {
+            for (final Map.Entry<String, ?> param : params.entrySet()) {
+                query.setParameter(param.getKey(), param.getValue());
+            }
+        }
+
+        return (T) query.getSingleResult();
+    }
+
+    @Override
+    public T getByJPQLAndParameters(final String query, final Object... params) {
+        entityManager.clear();
+        Query jpqlQuery = entityManager.createQuery(query);
+
+        for (int i = 0; i < params.length; i++) {
+            jpqlQuery.setParameter(i, params[i]);
+        }
+
+        return (T) jpqlQuery.getSingleResult();
+    }
+
+    @Override
+    public T getByJPQLAndNamedParameters(final String query, final Map<String, ?> params) {
+
+        entityManager.clear();
+        Query jpqlQuery = entityManager.createQuery(query);
+
+        if (params != null) {
+            for (final Map.Entry<String, ?> param : params.entrySet()) {
+                jpqlQuery.setParameter(param.getKey(), param.getValue());
+            }
+        }
+
+        jpqlQuery.setFlushMode(FlushModeType.AUTO);
+
+        return (T) jpqlQuery.getSingleResult();
+
+    }
+
+    @Override
     public List<T> findAll() {
         CriteriaBuilder cb = entityManager.getCriteriaBuilder();
         CriteriaQuery<T> cq = cb.createQuery(persistentClass);
@@ -74,12 +129,6 @@ public class AbstractService<T, ID extends Serializable> implements Service<T, I
         q.setMaxResults(pageSize);
 
         return q.getResultList();
-    }
-
-    @Override
-    public T findById(final ID id) {
-        entityManager.clear();
-        return entityManager.find(persistentClass, id);
     }
 
     @Override
@@ -107,22 +156,76 @@ public class AbstractService<T, ID extends Serializable> implements Service<T, I
     }
 
     @Override
-    public T getByNamedQuery(final String name) {
-        return getByNamedQuery(name, null);
+    public List<T> listByNativeQuery(final String query) {
+        return this.listByNativeQueryAndParameters(query, Map.of());
     }
 
     @Override
-    public T getByNamedQuery(final String name, final Map<String, ?> params) {
-        Query query = entityManager.createNamedQuery(name);
+    public List<T> listByHQL(final String query) {
+        return this.listByJPQLAndParameters(query, Map.of());
+    }
+
+    public List<T> listByNativeQueryAndParameters(final String query, final Object... params) {
         entityManager.clear();
+        Query nativeQuery = entityManager.createNativeQuery(query, persistentClass);
+
+        for (int i = 0; i < params.length; i++) {
+            nativeQuery.setParameter(i + 1, params[i]);
+        }
+        return nativeQuery.getResultList();
+    }
+
+    @Override
+    public List<T> listByNativeQueryAndParameters(final String query, final Map<String, ?> params) {
+        entityManager.clear();
+        Query nativeQuery = entityManager.createNativeQuery(query, persistentClass);
 
         if (params != null) {
             for (final Map.Entry<String, ?> param : params.entrySet()) {
-                query.setParameter(param.getKey(), param.getValue());
+                nativeQuery.setParameter(param.getKey(), param.getValue());
             }
         }
+        return nativeQuery.getResultList();
+    }
 
-        return (T) query.getSingleResult();
+    @Override
+    public List<T> listByJPQLAndParameters(final String query, final Object... params) {
+        entityManager.clear();
+        Query jpqlQuery = entityManager.createQuery(query);
+
+        for (int i = 0; i < params.length; i++) {
+            jpqlQuery.setParameter(i, params[i]);
+        }
+        return jpqlQuery.getResultList();
+    }
+
+    @Override
+    public List<T> listByJPQLAndParameters(final String query, final Map<String, ?> params) {
+        entityManager.clear();
+        Query jpqlQuery = entityManager.createQuery(query);
+
+        if (params != null) {
+            for (final Map.Entry<String, ?> param : params.entrySet()) {
+                jpqlQuery.setParameter(param.getKey(), param.getValue());
+            }
+        }
+        return jpqlQuery.getResultList();
+
+    }
+
+    public String addClause(final String SQL, final String clause) {
+        StringBuilder where = new StringBuilder();
+
+        if (!SQL.toUpperCase().contains("WHERE")) {
+            where.append("\n WHERE ");
+        } else {
+            where.append("\n AND ");
+        }
+
+        where.append(clause);
+
+        return where.toString();
+
     }
 
     @Override
@@ -160,107 +263,5 @@ public class AbstractService<T, ID extends Serializable> implements Service<T, I
             utx.rollback();
             throw e;
         }
-    }
-
-    @Override
-    public List<T> listByNativeQuery(final String query) {
-        return this.listByNativeQueryAndParameters(query, Map.of());
-    }
-
-    @Override
-    public List<T> listByHQL(final String query) {
-        return this.listByJPQLAndParameters(query, Map.of());
-    }
-
-    public List<T> listByNativeQueryAndParameters(final String query, final Object... params) {
-        entityManager.clear();
-        Query nativeQuery = entityManager.createNativeQuery(query, persistentClass);
-
-        for (int i = 0; i < params.length; i++) {
-            nativeQuery.setParameter(i + 1, params[i]);
-        }
-        return nativeQuery.getResultList();
-    }
-
-    @Override
-    public List<T> listByNativeQueryAndParameters(final String query, final Map<String, ?> params) {
-        entityManager.clear();
-        Query nativeQuery = entityManager.createNativeQuery(query, persistentClass);
-
-        if (params != null) {
-            for (final Map.Entry<String, ?> param : params.entrySet()) {
-                nativeQuery.setParameter(param.getKey(), param.getValue());
-            }
-        }
-        return nativeQuery.getResultList();
-    }
-
-    public List<T> listByJPQLAndParameters(final String query, final Object... params) {
-        entityManager.clear();
-        Query jpqlQuery = entityManager.createQuery(query);
-
-        for (int i = 0; i < params.length; i++) {
-            jpqlQuery.setParameter(i, params[i]);
-        }
-        return jpqlQuery.getResultList();
-    }
-
-    @Override
-    public List<T> listByJPQLAndParameters(final String query, final Map<String, ?> params) {
-        entityManager.clear();
-        Query jpqlQuery = entityManager.createQuery(query);
-
-        if (params != null) {
-            for (final Map.Entry<String, ?> param : params.entrySet()) {
-                jpqlQuery.setParameter(param.getKey(), param.getValue());
-            }
-        }
-        return jpqlQuery.getResultList();
-
-    }
-
-    @Override
-    public T getByJPQLAndParameters(final String query, final Object... params) {
-        entityManager.clear();
-        Query jpqlQuery = entityManager.createQuery(query);
-
-        for (int i = 0; i < params.length; i++) {
-            jpqlQuery.setParameter(i, params[i]);
-        }
-
-        return (T) jpqlQuery.getSingleResult();
-    }
-
-    @Override
-    public T getByJPQLAndNamedParameters(final String query, final Map<String, ?> params) {
-
-        entityManager.clear();
-        Query jpqlQuery = entityManager.createQuery(query);
-
-        if (params != null) {
-            for (final Map.Entry<String, ?> param : params.entrySet()) {
-                jpqlQuery.setParameter(param.getKey(), param.getValue());
-            }
-        }
-
-        jpqlQuery.setFlushMode(FlushModeType.AUTO);
-
-        return (T) jpqlQuery.getSingleResult();
-
-    }
-
-    public String addClause(final String SQL, final String clause) {
-        StringBuilder where = new StringBuilder();
-
-        if (!SQL.toUpperCase().contains("WHERE")) {
-            where.append("\n WHERE ");
-        } else {
-            where.append("\n AND ");
-        }
-
-        where.append(clause);
-
-        return where.toString();
-
     }
 }
