@@ -14,8 +14,8 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import java.net.URI;
 
-@Path("/orders")
 @ApplicationScoped
+@Path("/orders")
 @Produces(MediaType.APPLICATION_JSON)
 public class OrdersResource extends BasicResource {
 
